@@ -16,6 +16,7 @@ public static class SetupPlayerAnimations
     const string ControllerPath = AnimFolder + "/PlayerAnimator.controller";
     const string EnemyControllerPath = AnimFolder + "/EnemyAnimator.controller";
     const string CharacterFbx = "Assets/Prefab/prisoner/source/Prisoner@T-Pose.fbx";
+    const string PoliceFbx = "Assets/Prefab/police/source/Happy Idle.fbx";
 
     // Clip gerak siklik — harus loop. Sisanya (Jump, Roll, Slide) sekali jalan.
     static readonly string[] LoopedClips = { "Idle", "Walking", "Running", "Sprint" };
@@ -33,6 +34,7 @@ public static class SetupPlayerAnimations
 
         // Model karakter juga harus Humanoid supaya retarget animasi Mixamo jalan.
         ConfigureImporter(CharacterFbx, false);
+        ConfigureImporter(PoliceFbx, false);
 
         // --- 3: bangun controller ---
         BuildController();
