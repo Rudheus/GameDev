@@ -40,7 +40,8 @@ public class PlayerRespawn : MonoBehaviour
             enemy.ResetToStart();
         }
 
-        // Feedback UI (opsional — aman kalau GameUI nggak ada di scene).
+        // Feedback UI & suara (opsional — aman kalau manager-nya nggak ada di scene).
         if (GameUI.Instance != null) GameUI.Instance.ShowCaught();
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayCaught();
     }
 }

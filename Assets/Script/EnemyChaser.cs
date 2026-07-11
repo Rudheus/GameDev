@@ -180,6 +180,16 @@ public class EnemyChaser : MonoBehaviour
         return true;
     }
 
+    // Dipanggil sistem lain (lampu sorot, dsb.): polisi datang menyelidiki posisi ini.
+    // Kalau lagi ngejar, abaikan — target langsung lebih penting daripada laporan.
+    public void Alert(Vector3 position)
+    {
+        if (state == State.Chase) return;
+        lastKnownPosition = position;
+        searchTimer = loseSightTime;
+        state = State.Search;
+    }
+
     // Balik ke posisi & state awal setelah player tertangkap & respawn.
     public void ResetToStart()
     {
