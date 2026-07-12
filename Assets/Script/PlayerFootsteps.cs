@@ -65,13 +65,22 @@ public class PlayerFootsteps : MonoBehaviour
         if (wasGrounded && !grounded && rb.linearVelocity.y > 1f)
             PlayClip(jumpClip);
 
-        // Mendarat: baru menyentuh tanah lagi.
+        // Mendarat: baru menyentuh tanah lagi — suara + debu kecil di kaki.
         if (!wasGrounded && grounded)
+        {
             PlayClip(landClip);
+            ImpactParticles.Spawn(transform.position + controller.groundCheckOffset,
+                new Color(0.72f, 0.7f, 0.64f, 0.85f), 12, 1.6f, 0.14f, 0.5f);
+        }
 
-        // Slide & dash: bunyikan di frame pertama mulainya.
+        // Slide & dash: bunyikan di frame pertama mulainya (dash + semburan debu).
         if (!wasSliding && controller.IsSliding) PlayClip(slideClip);
-        if (!wasDashing && controller.IsDashing) PlayClip(dashClip);
+        if (!wasDashing && controller.IsDashing)
+        {
+            PlayClip(dashClip);
+            ImpactParticles.Spawn(transform.position + controller.groundCheckOffset,
+                new Color(0.85f, 0.85f, 0.9f, 0.7f), 15, 2.2f, 0.12f, 0.45f);
+        }
 
         wasGrounded = grounded;
         wasSliding = controller.IsSliding;

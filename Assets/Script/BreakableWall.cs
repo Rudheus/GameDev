@@ -194,6 +194,10 @@ public class BreakableWall : MonoBehaviour
 
         if (structuralCollapse) CollapseUnsupported();
 
+        // Debu tembok pecah di titik tabrak — makin keras tabrakan makin nyembur.
+        ImpactParticles.Spawn(impactPoint, voxelColor,
+            30, Mathf.Clamp(impactSpeed * 0.4f, 2f, 6f), 0.18f, 0.8f);
+
         if (aliveCount == 0) Destroy(gameObject);
     }
 

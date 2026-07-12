@@ -10,12 +10,14 @@ public class GameUI : MonoBehaviour
 {
     public static GameUI Instance { get; private set; }
 
-    enum UIState { Menu, Playing, Paused, Won }
+    enum UIState { Menu, Playing, Paused, Won, Lost }
 
     [Header("Panels (drag dari Canvas)")]
     public GameObject menuPanel;
     public GameObject pausePanel;
     public GameObject winPanel;
+    [Tooltip("Game over — waktu habis (skor 0): Adrian terlambat.")]
+    public GameObject losePanel;
 
     [Header("HUD (drag dari Canvas)")]
     [Tooltip("Root stamina bar (disembunyikan saat di main menu).")]
@@ -169,11 +171,20 @@ public class GameUI : MonoBehaviour
         SetGameplayActive(false);
     }
 
-    void SetPanels(bool menu = false, bool pause = false, bool win = false)
+    // Dipanggil ScoreManager saat skor habis: waktu Adrian habis — kalah.
+    public void ShowGameOver()
+    {
+        state = UIState.Lost;
+        SetPanels(lose: true);
+        SetGameplayActive(false);
+    }
+
+    void SetPanels(bool menu = false, bool pause = false, bool win = false, bool lose = false)
     {
         if (menuPanel != null) menuPanel.SetActive(menu);
         if (pausePanel != null) pausePanel.SetActive(pause);
         if (winPanel != null) winPanel.SetActive(win);
+        if (losePanel != null) losePanel.SetActive(lose);
         if (staminaBar != null) staminaBar.SetActive(!menu); // HUD sembunyi di main menu
     }
 

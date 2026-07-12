@@ -41,6 +41,8 @@ public class AudioManager : MonoBehaviour
     [Header("Stingers")]
     public AudioClip caughtClip;
     public AudioClip winClip;
+    [Tooltip("Saat game over (skor habis). Boleh pakai clip yang sama dengan caught.")]
+    public AudioClip loseClip;
     [Range(0f, 1f)] public float stingerVolume = 0.8f;
 
     private AudioSource bgmSource;
@@ -146,6 +148,15 @@ public class AudioManager : MonoBehaviour
         sirenSource.Stop();
         ambienceSource.Stop();
         PlayOneShot(winClip);
+    }
+
+    // Kalah (waktu habis): senyap juga — beri ruang buat beratnya momen itu.
+    public void PlayLose()
+    {
+        bgmSource.Stop();
+        sirenSource.Stop();
+        ambienceSource.Stop();
+        PlayOneShot(loseClip != null ? loseClip : caughtClip);
     }
 
     // Buat SFX bebas (tombol UI, dll.) dari script lain.

@@ -40,6 +40,8 @@ public class EnemyChaser : MonoBehaviour
     [Tooltip("Titik-titik patroli (opsional). Kosong = diam di posisi start sebagai penjaga.")]
     public Transform[] patrolPoints;
     public float waypointTolerance = 0.6f;
+    [Tooltip("Berhenti sebentar di tiap titik patroli (detik) sambil menoleh ke titik berikutnya, baru lanjut.")]
+    public float waypointWaitTime = 1.5f;
 
     private Rigidbody rb;
     private PlayerRespawn playerRespawn;
@@ -49,6 +51,7 @@ public class EnemyChaser : MonoBehaviour
 
     private State state = State.Patrol;
     private int patrolIndex;
+    private float waypointWaitTimer;
     private Vector3 lastKnownPosition;
     private float searchTimer;
 
@@ -100,7 +103,7 @@ public class EnemyChaser : MonoBehaviour
 
     void PatrolUpdate(bool sees)
     {
-        if (sees) { state = State.Chase; return; }
+        if (sees) { state = State.Chase; waypointWaitTimer = 0f; return; }
 
         // Tanpa waypoint: diam sebagai penjaga.
         if (patrolPoints == null || patrolPoints.Length == 0)
@@ -112,10 +115,26 @@ public class EnemyChaser : MonoBehaviour
         Transform wp = patrolPoints[patrolIndex];
         if (wp == null) { AdvanceWaypoint(); return; }
 
+        // Sampai di titik: berhenti sebentar sambil menoleh ke titik berikutnya
+        // (cone pandangannya ikut menyapu!), baru lanjut jalan.
         if (FlatDistance(wp.position) <= waypointTolerance)
         {
-            AdvanceWaypoint();
             StopHorizontal();
+            waypointWaitTimer += Time.fixedDeltaTime;
+
+            Transform next = patrolPoints[(patrolIndex + 1) % patrolPoints.Length];
+            if (next != null)
+            {
+                Vector3 toNext = next.position - transform.position;
+                toNext.y = 0f;
+                if (toNext.sqrMagnitude > 0.01f) FaceToward(toNext.normalized);
+            }
+
+            if (waypointWaitTimer >= waypointWaitTime)
+            {
+                waypointWaitTimer = 0f;
+                AdvanceWaypoint();
+            }
             return;
         }
 
@@ -198,6 +217,7 @@ public class EnemyChaser : MonoBehaviour
         transform.SetPositionAndRotation(startPosition, startRotation);
         state = State.Patrol;
         patrolIndex = 0;
+        waypointWaitTimer = 0f;
     }
 
     float FlatDistance(Vector3 worldPos)

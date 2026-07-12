@@ -27,7 +27,8 @@ public class GoalTrigger : MonoBehaviour
         reached = true;
         Debug.Log("MENANG! Player sampai di tujuan.");
 
-        // Panel menang & suara (opsional — aman kalau manager-nya nggak ada di scene).
+        // Panel menang, suara, & skor akhir (opsional — aman kalau manager-nya nggak ada di scene).
+        if (ScoreManager.Instance != null) ScoreManager.Instance.OnWin();
         if (GameUI.Instance != null) GameUI.Instance.ShowWin();
         if (AudioManager.Instance != null) AudioManager.Instance.PlayWin();
 
