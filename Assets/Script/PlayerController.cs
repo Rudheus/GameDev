@@ -248,16 +248,34 @@ public class PlayerController : MonoBehaviour
 
     // Arah input WASD relatif kamera, di-flatten ke bidang XZ (normalized, atau zero kalau nggak ada input).
     Vector3 MoveDirection()
+{
+    float moveX = Input.GetAxis("Horizontal");
+    float moveZ = Input.GetAxis("Vertical");
+
+    // FIX: Pastikan memori kamera selalu mengambil yang aktif saat ini jika cam bernilai null
+    if (cam == null)
     {
-        float moveX = Input.GetAxis("Horizontal");
-        float moveZ = Input.GetAxis("Vertical");
-
-        Vector3 camForward = cam.forward; camForward.y = 0f; camForward.Normalize();
-        Vector3 camRight   = cam.right;   camRight.y   = 0f; camRight.Normalize();
-
-        Vector3 dir = camForward * moveZ + camRight * moveX;
-        return dir.sqrMagnitude > 0.01f ? dir.normalized : Vector3.zero;
+        if (Camera.main != null) cam = Camera.main.transform;
+        else return Vector3.zero; // Cari aman jika tidak ada kamera di scene
     }
+
+    // Ambil arah depan dan kanan kamera secara dinamis
+    Vector3 camForward = cam.forward; 
+    Vector3 camRight   = cam.right;   
+
+    // Flatten / Nol-kan sumbu Y agar gerakan tetap di bidang datar (Horizontal)
+    camForward.y = 0f; 
+    camRight.y   = 0f; 
+
+    // Satukan kembali arahnya setelah Y di-nol-kan
+    camForward.Normalize();
+    camRight.Normalize();
+
+    // Hitung arah gerak berdasarkan input WASD dan posisi kamera terbaru
+    Vector3 dir = camForward * moveZ + camRight * moveX;
+    
+    return dir.sqrMagnitude > 0.01f ? dir.normalized : Vector3.zero;
+}
 
     bool CheckGrounded()
     {
