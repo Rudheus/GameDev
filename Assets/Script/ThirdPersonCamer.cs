@@ -6,7 +6,7 @@ public class ThirdPersonCamera : MonoBehaviour
     public Transform target;
 
     [Header("Orbit")]
-    public float distance = 5f;
+    public float distance = 3f;
     public float height = 2f;
     public float mouseSensitivity = 3f;
 
