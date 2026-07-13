@@ -147,7 +147,17 @@ public class GameUI : MonoBehaviour
     {
         restartRequested = false;
         Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        // Selalu balik ke scene pertama di build list (Level1) — di situ main menu-nya.
+        SceneManager.LoadScene(0);
+    }
+
+    // Pindah level (dipanggil GoalTrigger / cutscene transisi): scene berikutnya
+    // langsung masuk mode main, tanpa mampir main menu lagi.
+    public void LoadLevel(string sceneName)
+    {
+        restartRequested = true;
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(sceneName);
     }
 
     public void QuitGame()

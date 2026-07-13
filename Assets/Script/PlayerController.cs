@@ -229,6 +229,13 @@ public class PlayerController : MonoBehaviour
         if (sliding) EndSlide();
     }
 
+    // Dipanggil pickup stamina: isi ulang + lepas kunci exhausted kalau sudah cukup.
+    public void RefillStamina(float amount)
+    {
+        stamina = Mathf.Min(stamina + amount, maxStamina);
+        if (exhausted && stamina >= staminaRecoverThreshold) exhausted = false;
+    }
+
     // Ruang berdiri kosong? Cek sphere di posisi kepala saat berdiri penuh.
     bool CanStandUp()
     {

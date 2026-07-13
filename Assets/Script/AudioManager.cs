@@ -66,7 +66,9 @@ public class AudioManager : MonoBehaviour
 
     void Start()
     {
-        enemies = FindObjectsByType<EnemyChaser>(FindObjectsSortMode.None);
+        // Include yang nonaktif — polisi "kejutan" yang diaktifkan trigger di tengah
+        // level tetap kedata buat sirine & sting deteksi.
+        enemies = FindObjectsByType<EnemyChaser>(FindObjectsInactive.Include, FindObjectsSortMode.None);
         wasChasing = new bool[enemies.Length];
 
         var player = FindFirstObjectByType<PlayerController>();
@@ -94,7 +96,7 @@ public class AudioManager : MonoBehaviour
         for (int i = 0; i < enemies.Length; i++)
         {
             var e = enemies[i];
-            if (e == null) continue;
+            if (e == null || !e.isActiveAndEnabled) continue;
 
             bool chasing = e.IsChasing;
             if (chasing && !wasChasing[i]) PlayOneShot(detectedClip); // baru saja melihatmu!

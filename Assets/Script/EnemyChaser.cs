@@ -38,6 +38,16 @@ public class EnemyChaser : MonoBehaviour
     [Tooltip("Player dianggap tertangkap begitu jaraknya di bawah nilai ini → respawn.")]
     public float catchDistance = 1.2f;
 
+    [Header("Anti-stuck")]
+    [Tooltip("Kalau berusaha bergerak tapi nyaris diam selama ini (detik) → auto-reset (nyangkut di geometri).")]
+    public float stuckResetTime = 3f;
+
+    [Header("Relentless — pengejar Level 2")]
+    [Tooltip("Selalu tahu posisi player & tak pernah menyerah (abaikan vision/patroli). Set moveSpeed di antara jalan (5) dan sprint (8) player biar bisa dikabur-in tapi menekan.")]
+    public bool relentless = false;
+    [Tooltip("Khusus relentless: setelah player respawn, polisi muncul segini meter di belakangnya (bukan balik ke start level).")]
+    public float respawnBehindDistance = 12f;
+
     [Header("Patrol")]
     [Tooltip("Titik-titik patroli (opsional). Kosong = diam di posisi start sebagai penjaga.")]
     public Transform[] patrolPoints;
@@ -57,6 +67,9 @@ public class EnemyChaser : MonoBehaviour
     private Vector3 lastKnownPosition;
     private float searchTimer;
 
+    private float stuckTimer;
+    private Vector3 stuckAnchor; // posisi terakhir saat masih dianggap "bergerak"
+
     public bool IsChasing => state == State.Chase;
 
     void Start()
@@ -64,8 +77,23 @@ public class EnemyChaser : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
 
+        // Tanpa gesekan — biar nggak "menempel" di tembok saat mendorong ke arah target
+        // (penyebab macet yang sama dengan yang dulu dialami player).
+        var col = GetComponent<Collider>();
+        if (col != null)
+        {
+            col.material = new PhysicsMaterial("EnemyFrictionless")
+            {
+                dynamicFriction = 0f,
+                staticFriction = 0f,
+                frictionCombine = PhysicsMaterialCombine.Minimum,
+                bounceCombine = PhysicsMaterialCombine.Minimum
+            };
+        }
+
         startPosition = transform.position;
         startRotation = transform.rotation;
+        stuckAnchor = transform.position;
 
         if (target == null)
         {
@@ -94,13 +122,50 @@ public class EnemyChaser : MonoBehaviour
             return;
         }
 
-        bool sees = CanSeePlayer(flatDist);
+        // Relentless: selalu "melihat" player — FSM langsung konvergen ke Chase
+        // dan nggak pernah masuk Search/nyerah.
+        bool sees = relentless || CanSeePlayer(flatDist);
 
         switch (state)
         {
             case State.Patrol: PatrolUpdate(sees); break;
             case State.Chase:  ChaseUpdate(sees); break;
             case State.Search: SearchUpdate(sees); break;
+        }
+
+        UpdateStuckWatchdog();
+    }
+
+    // Nyangkut di geometri (berusaha jalan tapi nyaris diam) → auto-reset.
+    // Polisi biasa balik ke pos patroli, relentless muncul lagi di belakang player.
+    void UpdateStuckWatchdog()
+    {
+        bool tryingToMove =
+            state == State.Chase ||
+            state == State.Search ||
+            (state == State.Patrol && patrolPoints != null && patrolPoints.Length > 0 && waypointWaitTimer <= 0f);
+
+        if (!tryingToMove)
+        {
+            stuckTimer = 0f;
+            stuckAnchor = transform.position;
+            return;
+        }
+
+        // Sudah berpindah cukup jauh dari anchor? Berarti nggak macet.
+        if ((transform.position - stuckAnchor).sqrMagnitude > 0.09f) // > 0.3m
+        {
+            stuckTimer = 0f;
+            stuckAnchor = transform.position;
+            return;
+        }
+
+        stuckTimer += Time.fixedDeltaTime;
+        if (stuckTimer >= stuckResetTime)
+        {
+            stuckTimer = 0f;
+            stuckAnchor = transform.position;
+            ResetToStart();
         }
     }
 
@@ -216,13 +281,28 @@ public class EnemyChaser : MonoBehaviour
         state = State.Search;
     }
 
-    // Balik ke posisi & state awal setelah player tertangkap & respawn.
+    // Setelah player tertangkap & respawn: polisi biasa balik ke pos patroli awal,
+    // pengejar relentless muncul di belakang player biar kejaran langsung lanjut.
     public void ResetToStart()
     {
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
-        transform.SetPositionAndRotation(startPosition, startRotation);
-        state = State.Patrol;
+
+        if (relentless && target != null)
+        {
+            Vector3 back = target.forward;
+            back.y = 0f;
+            back = back.sqrMagnitude > 0.01f ? back.normalized : Vector3.forward;
+            transform.SetPositionAndRotation(
+                target.position - back * respawnBehindDistance,
+                Quaternion.LookRotation(back));
+        }
+        else
+        {
+            transform.SetPositionAndRotation(startPosition, startRotation);
+        }
+
+        state = State.Patrol; // relentless langsung balik Chase sendiri di frame berikutnya
         patrolIndex = 0;
         waypointWaitTimer = 0f;
     }

@@ -6,7 +6,10 @@ using UnityEngine.Events;
 [RequireComponent(typeof(Collider))]
 public class GoalTrigger : MonoBehaviour
 {
-    [Tooltip("Dipanggil sekali saat player sampai. Hook UI menang / load level berikutnya di sini nanti.")]
+    [Tooltip("Nama scene level berikutnya (mis. Level2). KOSONGKAN di level terakhir → menang.")]
+    public string nextSceneName;
+
+    [Tooltip("Dipanggil sekali saat player sampai. Hook UI menang / cutscene transisi di sini.")]
     public UnityEvent onReached;
 
     private bool reached;
@@ -25,9 +28,19 @@ public class GoalTrigger : MonoBehaviour
         if (other.GetComponentInParent<PlayerController>() == null) return;
 
         reached = true;
-        Debug.Log("MENANG! Player sampai di tujuan.");
 
-        // Panel menang, suara, & skor akhir (opsional — aman kalau manager-nya nggak ada di scene).
+        // Ada level berikutnya → langsung lanjut (tanpa layar menang).
+        if (!string.IsNullOrEmpty(nextSceneName))
+        {
+            Debug.Log($"Level selesai — lanjut ke {nextSceneName}.");
+            onReached.Invoke();
+            if (GameUI.Instance != null) GameUI.Instance.LoadLevel(nextSceneName);
+            else UnityEngine.SceneManagement.SceneManager.LoadScene(nextSceneName);
+            return;
+        }
+
+        // Level terakhir → menang.
+        Debug.Log("MENANG! Player sampai di tujuan.");
         if (ScoreManager.Instance != null) ScoreManager.Instance.OnWin();
         if (GameUI.Instance != null) GameUI.Instance.ShowWin();
         if (AudioManager.Instance != null) AudioManager.Instance.PlayWin();
