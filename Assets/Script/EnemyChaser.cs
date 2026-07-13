@@ -27,6 +27,8 @@ public class EnemyChaser : MonoBehaviour
     public LayerMask obstacleMask;
     [Tooltip("Tinggi 'mata' dari pivot, buat raycast garis pandang.")]
     public float eyeHeight = 1.5f;
+    [Tooltip("Beda ketinggian maksimum yang masih kelihatan. Player di atap (lebih tinggi dari ini) aman — menghargai parkour.")]
+    public float verticalViewLimit = 2.5f;
 
     [Header("Chase / Search")]
     [Tooltip("Setelah kehilangan pandangan, berapa lama polisi masih memburu ke titik terakhir sebelum menyerah.")]
@@ -82,9 +84,10 @@ public class EnemyChaser : MonoBehaviour
             return;
         }
 
-        // Tangkap berlaku di state manapun selama cukup dekat.
+        // Tangkap pakai jarak 3D — harus benar-benar menyentuh, bukan sekadar
+        // sejajar di XZ (player di atap tidak bisa ketangkap polisi di bawahnya).
         float flatDist = FlatDistance(target.position);
-        if (flatDist <= catchDistance)
+        if (Vector3.Distance(transform.position, target.position) <= catchDistance)
         {
             if (playerRespawn != null) playerRespawn.Respawn();
             StopHorizontal();
@@ -179,10 +182,14 @@ public class EnemyChaser : MonoBehaviour
         patrolIndex = (patrolIndex + 1) % patrolPoints.Length;
     }
 
-    // Player terlihat kalau: dalam jarak pandang, dalam sudut pandang, dan garis pandang tak terhalang tembok.
+    // Player terlihat kalau: dalam jarak pandang, dalam sudut pandang, beda tinggi
+    // masih wajar, dan garis pandang tak terhalang tembok.
     bool CanSeePlayer(float flatDist)
     {
         if (flatDist > viewDistance) return false;
+
+        // Pandangan terbatas vertikal — player di atap/di bawah jembatan tak terlihat.
+        if (Mathf.Abs(target.position.y - transform.position.y) > verticalViewLimit) return false;
 
         Vector3 eye = transform.position + Vector3.up * eyeHeight;
         Vector3 toTarget = (target.position + Vector3.up * eyeHeight) - eye;
