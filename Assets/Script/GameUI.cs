@@ -36,6 +36,10 @@ public class GameUI : MonoBehaviour
     // Di-set tombol Restart: setelah scene reload, langsung main (lewati menu).
     static bool restartRequested;
 
+    // Di-set StoryCutscene/VideoCutscene selama cutscene jalan:
+    // Esc dipakai buat skip cutscene, bukan buka pause.
+    public static bool CutsceneActive;
+
     private UIState state = UIState.Menu;
     private float caughtTimer;
 
@@ -94,7 +98,7 @@ public class GameUI : MonoBehaviour
             staminaFill.color = player.IsExhausted ? staminaExhausted : staminaNormal;
         }
 
-        if (Input.GetKeyDown(KeyCode.Escape))
+        if (Input.GetKeyDown(KeyCode.Escape) && !CutsceneActive)
         {
             if (state == UIState.Playing) Pause();
             else if (state == UIState.Paused) Resume();
@@ -169,6 +173,15 @@ public class GameUI : MonoBehaviour
         state = UIState.Won;
         SetPanels(win: true);
         SetGameplayActive(false);
+    }
+
+    // Buat cutscene di tengah gameplay (dipanggil CutsceneTrigger via Inspector):
+    // bekukan game tanpa memunculkan panel pause, lalu lanjutkan setelah selesai.
+    public void FreezeForCutscene() => SetGameplayActive(false);
+
+    public void ResumeFromCutscene()
+    {
+        if (state == UIState.Playing) SetGameplayActive(true);
     }
 
     // Dipanggil ScoreManager saat skor habis: waktu Adrian habis — kalah.

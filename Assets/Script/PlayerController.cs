@@ -96,6 +96,16 @@ public class PlayerController : MonoBehaviour
         {
             standingHeight = capsule.height;
             standingCenter = capsule.center;
+
+            // Tanpa gesekan: nempel ke sisi tembok saat lompat bikin player "menggantung"
+            // (friction menahan gravitasi). Gerakan darat aman — velocity di-set langsung.
+            capsule.material = new PhysicsMaterial("PlayerFrictionless")
+            {
+                dynamicFriction = 0f,
+                staticFriction = 0f,
+                frictionCombine = PhysicsMaterialCombine.Minimum,
+                bounceCombine = PhysicsMaterialCombine.Minimum
+            };
         }
         else
         {
